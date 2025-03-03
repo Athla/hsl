@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"hsl/internal/server/middlewares"
 	"log"
 	"net/http"
 
@@ -12,7 +13,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	r := mux.NewRouter()
 
 	// Apply CORS middleware
-	r.Use(s.corsMiddleware)
+	r.Use(middlewares.CorsMiddleware)
 
 	// Home Handlers
 
@@ -23,28 +24,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 	r.HandleFunc("/api/health", s.healthHandler)
 	// straming handlers
 	// Need to be authed, so gotta add a authMiddlewware
-	r.Use(s.AuthMiddleware)
+	r.Use(middlewares.AuthMiddleware)
 
 	return r
-}
-
-// CORS middleware
-func (s *Server) corsMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// CORS Headers
-		w.Header().Set("Access-Control-Allow-Origin", "*") // Wildcard allows all origins
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
-		w.Header().Set("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type")
-		w.Header().Set("Access-Control-Allow-Credentials", "false") // Credentials not allowed with wildcard origins
-
-		// Handle preflight OPTIONS requests
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
 }
 
 func (s *Server) HelloWorldHandler(w http.ResponseWriter, r *http.Request) {
